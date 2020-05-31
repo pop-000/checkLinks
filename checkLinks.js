@@ -42,7 +42,7 @@ class ExamingPage extends React.Component{
                 let i = 0;
                 const linkList = links.type.map((link) =>
                     React.createElement("li", {
-                        key: i++
+                        key: "l" + i++
                     }, link)
                 );
                 result += React.createElement("ul", {className: `links-` + type}, linkList);  
