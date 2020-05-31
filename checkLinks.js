@@ -1,61 +1,35 @@
-function getPage(src) {
-    // const handler = window.location.href + "ajax_handler.php";
-    const handler = window.location.protocol + "//" + window.location.hostname + "/checkSiteLinks/ajax_handler.php";
-    let result = {};
-    let request = $.ajax({
-        method: 'POST',
-        url: handler,
-        data: {
-            src: src,
-            action: "get_page",
-        },
-        dataType: 'json'
-    })
-        .done(function( response ) {
-            result.result = true;
-            result.data = response;
-            // return result;
-        })
-        .fail(function(jqXHR, textStatus, errorThrown) {
-            result.result = false;
-            result.error = textStatus + ": " + errorThrown;
-            // return result;
-        });
+async function loadPage(src){
     
-    return request;
-}
-
-function loadPage(src) {
-
-    async function requestData(url){
-        const response = await fetch(url);
-        return await response.json();
-    }
     let url = window.location.protocol + "//" + window.location.hostname + "/checkSiteLinks/ajax_handler.php";
     url += "?src=" + encodeURI(src);
     url += "&action=get_page";
 
     let page = {}
 
-    requestData(url)
-        .then((data) => {
-            let json = JSON.stringify(data);
-            if (json.result) { 
-                page = {
-                    result: true,
-                    data: json.data
-                };
-            } else {
-                page = {
-                    result: false,
-                    error: "Ошибка HTTP: " + data.status
-                };
+    let response = await fetch(url);
+    if (response.ok) { 
+        let json = await response.json();
+        if(json.result){
+            page = {
+                result: true,
+                data: json.data
             }
-        });
-        
-    return page;          
-}
+        } else {
+            page = {
+                result: false,
+                error: "Ошибка обработки"
+            };
+        }
+    } else {
+        page = {
+            result: false,
+            error: "Ошибка HTTP: " + response.error
+        };
+    }
 
+    return page; 
+}
+    
 class ExamingPage extends React.Component{
 
     getLinkList(links){
@@ -137,7 +111,7 @@ class SiteAddressForm extends React.Component{
                     })),
                     React.createElement("input", {
                         type: "submit",
-                        value: "Отправить"
+                        value: "Проверить"
                     })
             )
         );
@@ -164,7 +138,7 @@ class BlockExamine extends React.Component {
         
         // const page = getPage(url);     
         const page = loadPage(url);     
-        console.log("page: " + page);
+        console.log("page: " + JSON.stringify(page));
 
         if(page.result){
             this.setState({
@@ -194,7 +168,7 @@ class BlockExamine extends React.Component {
                         alt: "logo",
                         className: "App-logo"
                     }),
-                    React.createElement("h1", null, "Проверка ссылок на сайте"), 
+                    React.createElement("h1", null, "Проверка ссылок сайта"), 
                     React.createElement("div", null, 
                         React.createElement(SiteAddressForm, {
                             onUrlSet: this.handleUrlSet
